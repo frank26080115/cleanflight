@@ -29,7 +29,8 @@ typedef enum {
     TELEMETRY_PROVIDER_FRSKY = 0,
     TELEMETRY_PROVIDER_HOTT,
     TELEMETRY_PROVIDER_MSP,
-    TELEMETRY_PROVIDER_MAX = TELEMETRY_PROVIDER_MSP
+    TELEMETRY_PROVIDER_SMARTPORT,
+    TELEMETRY_PROVIDER_MAX = TELEMETRY_PROVIDER_SMARTPORT
 } telemetryProvider_e;
 
 typedef enum {
@@ -57,5 +58,7 @@ void handleTelemetry(void);
 
 uint32_t getTelemetryProviderBaudRate(void);
 void useTelemetryConfig(telemetryConfig_t *telemetryConfig);
+bool telemetryAllowsOtherSerial(int serialPortFunction);
+bool isTelemetryPortShared(void);
 
 #endif /* TELEMETRY_COMMON_H_ */

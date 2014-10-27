@@ -38,7 +38,10 @@
 #include "io/serial.h"
 #include "config/config.h"
 
-uint32_t getTelemetryProviderBaudRate(void);
+#ifdef TELEMETRY
+#include "telemetry/telemetry.h"
+#endif
+
 void updateSerialRxFunctionConstraint(functionConstraint_t *functionConstraintToUpdate);
 
 void mspInit(serialConfig_t *serialConfig);
@@ -405,6 +408,7 @@ functionConstraint_t *getConfiguredFunctionConstraint(serialPortFunction_e funct
 
 #ifdef TELEMETRY
         case FUNCTION_TELEMETRY:
+        case FUNCTION_SMARTPORT_TELEMETRY:
             configuredFunctionConstraint.minBaudRate = getTelemetryProviderBaudRate();
             configuredFunctionConstraint.maxBaudRate = configuredFunctionConstraint.minBaudRate;
             break;
@@ -456,6 +460,11 @@ bool isSerialConfigValid(serialConfig_t *serialConfigToCheck)
 
     functionConstraint = getConfiguredFunctionConstraint(FUNCTION_TELEMETRY);
     searchResult = findSerialPort(FUNCTION_TELEMETRY, functionConstraint);
+    // TODO check explicitly for SmartPort config
+    if (!searchResult) {
+        functionConstraint = getConfiguredFunctionConstraint(FUNCTION_SMARTPORT_TELEMETRY);
+        searchResult = findSerialPort(FUNCTION_SMARTPORT_TELEMETRY, functionConstraint);
+    }
     if (feature(FEATURE_TELEMETRY) && !searchResult) {
         return false;
     }
@@ -618,8 +627,15 @@ void serialInit(serialConfig_t *initialSerialConfig)
     serialConfig = initialSerialConfig;
     applySerialConfigToPortFunctions(serialConfig);
 
-    mspInit(serialConfig);
-    cliInit(serialConfig);
+#ifdef TELEMETRY
+    if (telemetryAllowsOtherSerial(FUNCTION_MSP))
+#endif
+        mspInit(serialConfig);
+
+#ifdef TELEMETRY
+    if (telemetryAllowsOtherSerial(FUNCTION_CLI))
+#endif
+        cliInit(serialConfig);
 }
 
 void handleSerial(void)
@@ -630,7 +646,10 @@ void handleSerial(void)
         return;
     }
 
-    mspProcess();
+#ifdef TELEMETRY
+    if (telemetryAllowsOtherSerial(FUNCTION_MSP))
+#endif
+        mspProcess();
 }
 
 void waitForSerialPortToFinishTransmitting(serialPort_t *serialPort)
