@@ -101,7 +101,7 @@ void useRcControlsConfig(modeActivationCondition_t *modeActivationConditions, es
 master_t masterConfig;      // master config struct with data independent from profiles
 profile_t *currentProfile;   // profile config struct
 
-static const uint8_t EEPROM_CONF_VERSION = 83;
+static const uint8_t EEPROM_CONF_VERSION = 84;
 
 static void resetAccelerometerTrims(flightDynamicsTrims_t *accelerometerTrims)
 {
@@ -200,7 +200,7 @@ void resetFlight3DConfig(flight3DConfig_t *flight3DConfig)
 void resetTelemetryConfig(telemetryConfig_t *telemetryConfig)
 {
     telemetryConfig->telemetry_provider = TELEMETRY_PROVIDER_FRSKY;
-    telemetryConfig->frsky_inversion = SERIAL_NOT_INVERTED;
+    telemetryConfig->telemetry_inversion = SERIAL_NOT_INVERTED;
     telemetryConfig->telemetry_switch = 0;
     telemetryConfig->gpsNoFixLatitude = 0;
     telemetryConfig->gpsNoFixLongitude = 0;

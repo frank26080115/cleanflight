@@ -1,3 +1,11 @@
+# frank26080115's fork
+
+I am adding my own features to Cleanflight, and maybe one day they'll be merged into Cleanflight.
+
+For binaries, look for a hex file in the obj with the latest date. It may not be tested and I only own a Naze32 Acro to test on.
+
+The following readme is from the original Cleanflight repo. https://github.com/cleanflight/cleanflight/
+
 # Cleanflight
 
 Clean-code version of baseflight flight-controller - flight controllers are used to fly multi-rotor craft and fixed wing craft.

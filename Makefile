@@ -33,7 +33,7 @@ SERIAL_DEVICE	?= /dev/ttyUSB0
 # Things that need to be maintained as the source changes
 #
 
-FORKNAME			 = cleanflight
+FORKNAME			 = cleanflight_frank26080115
 
 VALID_TARGETS	 = NAZE NAZE32PRO OLIMEXINO STM32F3DISCOVERY CHEBUZZF3 CC3D CJMCU EUSTM32F103RC MASSIVEF3
 
@@ -75,6 +75,8 @@ VPATH		:= $(VPATH):$(CMSIS_DIR)/CM1/CoreSupport:$(CMSIS_DIR)/CM1/DeviceSupport/S
 CMSIS_SRC	 = $(notdir $(wildcard $(CMSIS_DIR)/CM1/CoreSupport/*.c \
 			   $(CMSIS_DIR)/CM1/DeviceSupport/ST/STM32F30x/*.c))
 
+STARTUP_SRC = startup_stm32f30x_md_gcc.S
+
 INCLUDE_DIRS := $(INCLUDE_DIRS) \
 		   $(STDPERIPH_DIR)/inc \
 		   $(USBFS_DIR)/inc \
@@ -110,6 +112,8 @@ VPATH		:= $(VPATH):$(CMSIS_DIR)/CM3/CoreSupport:$(CMSIS_DIR)/CM3/DeviceSupport/S
 CMSIS_SRC	 = $(notdir $(wildcard $(CMSIS_DIR)/CM3/CoreSupport/*.c \
 			   $(CMSIS_DIR)/CM3/DeviceSupport/ST/STM32F10x/*.c))
 
+STARTUP_SRC = startup_stm32f10x_hd_gcc.S
+
 INCLUDE_DIRS := $(INCLUDE_DIRS) \
 		   $(STDPERIPH_DIR)/inc \
 		   $(CMSIS_DIR)/CM3/CoreSupport \
@@ -133,6 +137,8 @@ STDPERIPH_SRC = $(notdir $(wildcard $(STDPERIPH_DIR)/src/*.c))
 VPATH		:= $(VPATH):$(CMSIS_DIR)/CM3/CoreSupport:$(CMSIS_DIR)/CM3/DeviceSupport/ST/STM32F10x
 CMSIS_SRC	 = $(notdir $(wildcard $(CMSIS_DIR)/CM3/CoreSupport/*.c \
 			   $(CMSIS_DIR)/CM3/DeviceSupport/ST/STM32F10x/*.c))
+
+STARTUP_SRC = startup_stm32f10x_md_gcc.S
 
 INCLUDE_DIRS := $(INCLUDE_DIRS) \
 		   $(STDPERIPH_DIR)/inc \
@@ -210,10 +216,11 @@ HIGHEND_SRC  = flight/autotune.c \
 		   telemetry/frsky.c \
 		   telemetry/hott.c \
 		   telemetry/msp.c \
+           telemetry/smartport.c \
 		   sensors/sonar.c \
 		   sensors/barometer.c
 
-NAZE_SRC	 = startup_stm32f10x_md_gcc.S \
+NAZE_SRC	 = \
 		   drivers/accgyro_adxl345.c \
 		   drivers/accgyro_bma280.c \
 		   drivers/accgyro_l3g4200d.c \
@@ -248,7 +255,7 @@ NAZE_SRC	 = startup_stm32f10x_md_gcc.S \
 		   $(HIGHEND_SRC) \
 		   $(COMMON_SRC)
 
-EUSTM32F103RC_SRC	 = startup_stm32f10x_hd_gcc.S \
+EUSTM32F103RC_SRC	 = \
 		   drivers/accgyro_adxl345.c \
 		   drivers/accgyro_bma280.c \
 		   drivers/accgyro_l3g4200d.c \
@@ -282,7 +289,7 @@ EUSTM32F103RC_SRC	 = startup_stm32f10x_hd_gcc.S \
 		   $(HIGHEND_SRC) \
 		   $(COMMON_SRC)
 
-OLIMEXINO_SRC	 = startup_stm32f10x_md_gcc.S \
+OLIMEXINO_SRC	 = \
 		   drivers/accgyro_mpu6050.c \
 		   drivers/adc.c \
 		   drivers/adc_stm32f10x.c \
@@ -320,7 +327,7 @@ $(error OPBL specified with a unsupported target)
 endif
 endif
 
-CJMCU_SRC	 = startup_stm32f10x_md_gcc.S \
+CJMCU_SRC	 = \
 		   drivers/adc.c \
 		   drivers/adc_stm32f10x.c \
 		   drivers/accgyro_mpu6050.c \
@@ -338,7 +345,7 @@ CJMCU_SRC	 = startup_stm32f10x_md_gcc.S \
 		   drivers/timer.c \
 		   $(COMMON_SRC)
 
-CC3D_SRC	 = startup_stm32f10x_md_gcc.S \
+CC3D_SRC	 = \
 		   drivers/accgyro_spi_mpu6000.c \
 		   drivers/adc.c \
 		   drivers/adc_stm32f10x.c \
@@ -360,7 +367,7 @@ CC3D_SRC	 = startup_stm32f10x_md_gcc.S \
 		   $(HIGHEND_SRC) \
 		   $(COMMON_SRC)
 
-STM32F30x_COMMON_SRC	 = startup_stm32f30x_md_gcc.S \
+STM32F30x_COMMON_SRC	 = \
 		   drivers/adc.c \
 		   drivers/adc_stm32f30x.c \
 		   drivers/bus_i2c_stm32f30x.c \
@@ -496,6 +503,9 @@ TARGET_OBJS	 = $(addsuffix .o,$(addprefix $(OBJECT_DIR)/$(TARGET)/,$(basename $(
 TARGET_DEPS	 = $(addsuffix .d,$(addprefix $(OBJECT_DIR)/$(TARGET)/,$(basename $($(TARGET)_SRC))))
 TARGET_MAP	 = $(OBJECT_DIR)/$(FORKNAME)_$(TARGET).map
 
+STARTUP_OBJ	 = $(addsuffix .o,$(addprefix $(OBJECT_DIR)/$(TARGET)/,$(basename $(STARTUP_SRC))))
+STARTUP_DEP	 = $(addsuffix .d,$(addprefix $(OBJECT_DIR)/$(TARGET)/,$(basename $(STARTUP_SRC))))
+
 # List of buildable ELF files and their object dependencies.
 # It would be nice to compute these lists, but that seems to be just beyond make.
 
@@ -505,7 +515,7 @@ $(TARGET_HEX): $(TARGET_ELF)
 $(TARGET_BIN): $(TARGET_ELF)
 	$(OBJCOPY) -O binary $< $@
 
-$(TARGET_ELF):  $(TARGET_OBJS)
+$(TARGET_ELF):  $(TARGET_OBJS) $(STARTUP_OBJ)
 	$(CC) -o $@ $^ $(LDFLAGS)
 	$(SIZE) $(TARGET_ELF) 
 
@@ -559,4 +569,4 @@ help:
 $(TARGET_OBJS) : Makefile
 
 # include auto-generated dependencies
--include $(TARGET_DEPS)
+-include $(TARGET_DEPS) $(STARTUP_DEP)
