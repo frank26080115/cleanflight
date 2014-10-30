@@ -166,6 +166,12 @@ static void smartPortDataReceive(uint16_t c)
 
 static void smartPortSendByte(uint8_t c, uint16_t *crcp)
 {
+    // smart port escape sequence
+    if (c == 0x7D || c == 0x7E) {
+        serialWrite(mySerPort, 0x7D);
+        c ^= 0x20;
+    }
+
     serialWrite(mySerPort, c);
 
     if (crcp == NULL)
